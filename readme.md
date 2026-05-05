@@ -200,6 +200,26 @@ Open the source folder and build NatNetFour2OSC Project
 
 [SharpOSC](https://github.com/tecartlab/SharpOSC/releases/tag/v0.1.2.0). This is a fork from the official repo with a new class that allows "bidirectional" udp connectîons.
 
+Releasing
+---------
+
+1. Make your changes in `src/NatNetFour2OSC.cs`
+2. Bump `AssemblyVersion` and `AssemblyFileVersion` in `src/Properties/AssemblyInfo.cs`:
+   - Bug fix → `1.0.1`
+   - New feature/flag → `1.1.0`
+   - Breaking OSC address changes → `2.0.0`
+3. Commit, tag, and push:
+
+```
+git add -p
+git commit -m "your message"
+git push origin master
+git tag v1.1.0
+git push --tags
+```
+
+GitHub Actions will build and publish the release automatically. The tag must match `AssemblyVersion` — the workflow will fail if they diverge.
+
 Contribute
 ----------
 
