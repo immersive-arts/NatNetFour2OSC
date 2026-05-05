@@ -268,8 +268,9 @@ namespace NatNetThree2OSC
             mMatrix = opts.mMatrix;
             mInvMatrix = opts.mInvMatrix;
 
-            Console.WriteLine("\n---- NatNetThree2OSC v. 9.0.0  ----");
-            Console.WriteLine("\n----    20230207 by maybites   ----");
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            Console.WriteLine("\n---- NatNetFour2OSC v. {0}.{1}.{2}  ----", version.Major, version.Minor, version.Build);
+            Console.WriteLine("\n----    20260505 by maybites   ----");
 
             Console.WriteLine("\nNatNetThree2OSC");
             Console.WriteLine("\t oscSendIP = \t\t({0:N3})", opts.mStrOscSendIP);
