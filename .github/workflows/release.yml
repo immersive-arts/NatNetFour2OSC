@@ -16,7 +16,7 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $line = Select-String -Path "src/Properties/AssemblyInfo.cs" -Pattern 'AssemblyVersion\("(.+)"\)'
+          $line = Select-String -Path "src/Properties/AssemblyInfo.cs" -Pattern '^\[assembly: AssemblyVersion\("(.+)"\)\]'
           $version = $line.Matches[0].Groups[1].Value
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
 
