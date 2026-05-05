@@ -166,6 +166,12 @@ namespace NatNetThree2OSC
         private static bool mMatrix = false;
         private static bool mInvMatrix = false;
 
+        // Motive state tracking for /motive/state/* feedback
+        private static bool mMotiveRecording = false;
+        private static bool mMotiveLiveMode = true;
+        private static string mMotiveTakeName = "";
+        private static string mMotiveSession = "";
+
         private static NatNetML.ConnectionType mConnectionType = ConnectionType.Multicast; // Multicast or Unicast mode
 
 
@@ -312,6 +318,239 @@ namespace NatNetThree2OSC
                         OSCProxy.Send(message);
                     }
                 }
+
+                // ── /motive/record/* ─────────────────────────────────────────────────────
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/record/start"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string takeName = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(takeName))
+                        {
+                            remoteControlMotive("SetRecordTakeName," + takeName);
+                            pushTakeNameState(takeName);
+                        }
+                    }
+                    remoteControlMotive("StartRecording");
+                    Console.WriteLine("Received /motive/record/start");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/record/stop"))
+                {
+                    remoteControlMotive("StopRecording");
+                    Console.WriteLine("Received /motive/record/stop");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/record/toggle"))
+                {
+                    remoteControlMotive(mMotiveRecording ? "StopRecording" : "StartRecording");
+                    Console.WriteLine("Received /motive/record/toggle");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/record/takename"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string takeName = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(takeName))
+                        {
+                            remoteControlMotive("SetRecordTakeName," + takeName);
+                            pushTakeNameState(takeName);
+                            Console.WriteLine("Received /motive/record/takename " + takeName);
+                        }
+                    }
+                }
+
+                // ── /motive/mode/* ───────────────────────────────────────────────────────
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/mode/live"))
+                {
+                    remoteControlMotive("LiveMode");
+                    pushModeState(true);
+                    Console.WriteLine("Received /motive/mode/live");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/mode/edit"))
+                {
+                    remoteControlMotive("EditMode");
+                    pushModeState(false);
+                    Console.WriteLine("Received /motive/mode/edit");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/mode/toggle"))
+                {
+                    if (mMotiveLiveMode)
+                    {
+                        remoteControlMotive("EditMode");
+                        pushModeState(false);
+                    }
+                    else
+                    {
+                        remoteControlMotive("LiveMode");
+                        pushModeState(true);
+                    }
+                    Console.WriteLine("Received /motive/mode/toggle");
+                }
+
+                // ── /motive/playback/* ───────────────────────────────────────────────────
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/play"))
+                {
+                    remoteControlMotive("TimelinePlay");
+                    Console.WriteLine("Received /motive/playback/play");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/stop"))
+                {
+                    remoteControlMotive("TimelineStop");
+                    Console.WriteLine("Received /motive/playback/stop");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/toggle"))
+                {
+                    // no persistent playing state — just toggle via TimelinePlay; Motive handles idempotency
+                    remoteControlMotive("TimelinePlay");
+                    Console.WriteLine("Received /motive/playback/toggle");
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/frame"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        int frame = Convert.ToInt32(messageReceived.Arguments[0]);
+                        remoteControlMotive("SetPlaybackCurrentFrame," + frame);
+                        Console.WriteLine("Received /motive/playback/frame " + frame);
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/start"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        int frame = Convert.ToInt32(messageReceived.Arguments[0]);
+                        remoteControlMotive("SetPlaybackStartFrame," + frame);
+                        Console.WriteLine("Received /motive/playback/start " + frame);
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/end"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        int frame = Convert.ToInt32(messageReceived.Arguments[0]);
+                        remoteControlMotive("SetPlaybackStopFrame," + frame);
+                        Console.WriteLine("Received /motive/playback/end " + frame);
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/loop"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        int loop = Convert.ToInt32(messageReceived.Arguments[0]);
+                        remoteControlMotive("SetPlaybackLooping," + loop);
+                        Console.WriteLine("Received /motive/playback/loop " + loop);
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/playback/take"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string takeName = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(takeName))
+                        {
+                            remoteControlMotive("SetPlaybackTakeName," + takeName);
+                            Console.WriteLine("Received /motive/playback/take " + takeName);
+                        }
+                    }
+                }
+
+                // ── /motive/asset/* ──────────────────────────────────────────────────────
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/asset/enable"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string name = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            remoteControlMotive("EnableAsset," + name);
+                            Console.WriteLine("Received /motive/asset/enable " + name);
+                        }
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/asset/disable"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string name = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            remoteControlMotive("DisableAsset," + name);
+                            Console.WriteLine("Received /motive/asset/disable " + name);
+                        }
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/asset/recalibrate"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string name = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            remoteControlMotive("RecalibrateAsset," + name);
+                            Console.WriteLine("Received /motive/asset/recalibrate " + name);
+                        }
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/asset/resetorientation"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string name = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            remoteControlMotive("ResetAssetOrientation," + name);
+                            Console.WriteLine("Received /motive/asset/resetorientation " + name);
+                        }
+                    }
+                }
+
+                // ── /motive/session/* ────────────────────────────────────────────────────
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/session/set"))
+                {
+                    if (messageReceived.Arguments.Count > 0)
+                    {
+                        string session = messageReceived.Arguments[0] as string;
+                        if (!string.IsNullOrEmpty(session))
+                        {
+                            remoteControlMotive("SetCurrentSession," + session);
+                            pushSessionState(session);
+                            Console.WriteLine("Received /motive/session/set " + session);
+                        }
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/session/get"))
+                {
+                    string result = remoteControlMotive("CurrentSessionPath");
+                    OSCProxy.Send(new OscMessage("/motive/state/session", result ?? ""));
+                    Console.WriteLine("Received /motive/session/get");
+                }
+
+                // ── /motive/query/* ──────────────────────────────────────────────────────
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/query/recording"))
+                {
+                    OSCProxy.Send(new OscMessage("/motive/state/recording", mMotiveRecording ? 1 : 0));
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/query/mode"))
+                {
+                    string result = remoteControlMotive("CurrentMode");
+                    bool live = result == "0";
+                    pushModeState(live);
+                    OSCProxy.Send(new OscMessage("/motive/state/mode", live ? "live" : "edit"));
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/query/takename"))
+                {
+                    string result = remoteControlMotive("GetTakeProperty,,Name");
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        pushTakeNameState(result.Trim());
+                        OSCProxy.Send(new OscMessage("/motive/state/takename", result.Trim()));
+                    }
+                }
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/query/framerate"))
+                {
+                    string result = remoteControlMotive("FrameRate");
+                    if (float.TryParse(result, out float fps))
+                        OSCProxy.Send(new OscMessage("/motive/state/framerate", fps));
+                }
+
                 else if (messageReceived != null && messageReceived.Address.Equals(value: "/script/oscModeSparck"))
                 {
                     if (messageReceived.Arguments.Count > 0)
@@ -546,6 +785,8 @@ namespace NatNetThree2OSC
                 Console.WriteLine("Success: Data Port Connected \n");
 
                 Console.WriteLine("======================== STREAMING IN (PRESS ESC TO EXIT) =====================\n");
+
+                queryAndPushMotiveState();
             }
             return connectionConfirmed;
         }
@@ -586,9 +827,14 @@ namespace NatNetThree2OSC
                 mAutoReconnect_frameCounter++;
                 mAutoReconnect_gotData = true;
 
+                // push recording state change when bRecording flips
+                if (data.bRecording != mMotiveRecording)
+                {
+                    mMotiveRecording = data.bRecording;
+                    OSCProxy.Send(new OscMessage("/motive/state/recording", data.bRecording ? 1 : 0));
+                }
+
                 int myTimestamp = (int)((Int64)(data.fTimestamp * 1000f) % 86400000);
-                /*  Processing and ouputting frame data every 200th frame.
-                    This conditional statement is included in order to simplify the program output */
                 var message = new OscMessage("/f/s", data.iFrame);
 
                 if (mOscModeSparck)
@@ -609,6 +855,9 @@ namespace NatNetThree2OSC
                     bundle.Add(message);
 
                     message = new OscMessage("/frame/timecode", (Int64)data.Timecode, (Int64)data.TimecodeSubframe);
+                    bundle.Add(message);
+
+                    message = new OscMessage("/frame/recording", data.bRecording ? 1 : 0);
                     bundle.Add(message);
                 }
 
@@ -761,10 +1010,14 @@ namespace NatNetThree2OSC
                     {
                         message = new OscMessage("/marker", rbData.ID, "position", pxt, pyt, pzt);
                         bundle.Add(message);
+                        message = new OscMessage("/marker", rbData.ID, "residual", rbData.residual);
+                        bundle.Add(message);
                     }
                     if (mOscModeIsa || mOscModeTouch)
                     {
                         message = new OscMessage("/marker/" + rbData.ID + "/position", pxt, pyt, pzt);
+                        bundle.Add(message);
+                        message = new OscMessage("/marker/" + rbData.ID + "/residual", rbData.residual);
                         bundle.Add(message);
                     }
                 }
@@ -1042,35 +1295,39 @@ namespace NatNetThree2OSC
 
                                 if (bone != null) // during a refetch the bone descriptions might be removed for a moment
                                 {
+                                    int boneTracked = boneData.Tracked ? 1 : 0;
                                     if (mOscModeMax)
                                     {
+                                        message = new OscMessage("/skeleton/bone", skl.Name, bone.ID, "tracked", boneTracked);
+                                        bundle.Add(message);
                                         message = new OscMessage("/skeleton/bone", skl.Name, bone.ID, "position", pxt, pyt, pzt);
                                         bundle.Add(message);
                                         message = new OscMessage("/skeleton/bone", skl.Name, bone.ID, "quat", qxt, qyt, qzt, qwt);
                                         bundle.Add(message);
-                                        //message = new OscMessage("/skeleton/joint", skl.Name, bone.ID, "quat", qxt, qyt, qzt, qwt);
-                                        //bundle.Add(message);
                                     }
                                     if (mOscModeIsa)
                                     {
+                                        message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/tracked", boneTracked);
+                                        bundle.Add(message);
                                         message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/position", pxt, pyt, pzt);
                                         bundle.Add(message);
                                         message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/quat", qxt, qyt, qzt, qwt);
                                         bundle.Add(message);
-                                        //message = new OscMessage("/skeleton/" + skl.Name + "/joint/" + bone.ID + "/quat", qxt, qyt, qzt, qwt);
-                                        //bundle.Add(message);
                                     }
                                     if (mOscModeTouch)
                                     {
+                                        message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/tracked", boneTracked);
+                                        bundle.Add(message);
                                         message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/transformation", pxt, pyt, pzt, qxt, qyt, qzt, qwt);
                                         bundle.Add(message);
-                                        //message = new OscMessage("/skeleton/" + skl.Name + "/joint/" + bone.ID + "/quat", qxt, qyt, qzt, qwt);
-                                        //bundle.Add(message);
                                     }
                                     if (mOscModeSparck)
                                     {
-                                        // skeleton -> /skel <skeltonID> <boneID> <timestamp> <px> <py> <pz> <qx> <qy> <qz> <qw>
-                                        message = new OscMessage("/skel", skl.ID, bone.ID, (float)data.fTimestamp * 1000f, pxt, pyt, pzt, qxt, qyt, qzt, qwt);
+                                        // tracked   -> /skel <skelID> <boneID> <datatype=0> <0/1>
+                                        // skeleton  -> /skel <skelID> <boneID> <datatype=2> <timestamp> <px> <py> <pz> <qx> <qy> <qz> <qw>
+                                        message = new OscMessage("/skel", skl.ID, bone.ID, 0, boneTracked);
+                                        bundle.Add(message);
+                                        message = new OscMessage("/skel", skl.ID, bone.ID, 2, (float)data.fTimestamp * 1000f, pxt, pyt, pzt, qxt, qyt, qzt, qwt);
                                         bundle.Add(message);
                                     }
                                 }
@@ -1103,6 +1360,76 @@ namespace NatNetThree2OSC
                 }
             }
             //Console.WriteLine("\n");
+        }
+
+        // ── Motive state helpers ──────────────────────────────────────────────────
+
+        static void pushRecordingState(bool recording)
+        {
+            if (mMotiveRecording == recording) return;
+            mMotiveRecording = recording;
+            OSCProxy.Send(new OscMessage("/motive/state/recording", recording ? 1 : 0));
+        }
+
+        static void pushModeState(bool liveMode)
+        {
+            if (mMotiveLiveMode == liveMode) return;
+            mMotiveLiveMode = liveMode;
+            OSCProxy.Send(new OscMessage("/motive/state/mode", liveMode ? "live" : "edit"));
+        }
+
+        static void pushTakeNameState(string name)
+        {
+            if (mMotiveTakeName == name) return;
+            mMotiveTakeName = name;
+            OSCProxy.Send(new OscMessage("/motive/state/takename", name));
+        }
+
+        static void pushSessionState(string session)
+        {
+            if (mMotiveSession == session) return;
+            mMotiveSession = session;
+            OSCProxy.Send(new OscMessage("/motive/state/session", session));
+        }
+
+        static void queryAndPushMotiveState()
+        {
+            byte[] resp = new byte[1024];
+            int respSize = 0;
+
+            // recording state from frame flag is more reliable; query mode explicitly
+            int r = mNatNet.SendMessageAndWait("CurrentMode", 3, 100, out resp, out respSize);
+            if (r == 0 && respSize == 4)
+            {
+                int mode = BitConverter.ToInt32(resp, 0);
+                bool live = (mode == 0);
+                if (mMotiveLiveMode != live)
+                {
+                    mMotiveLiveMode = live;
+                    OSCProxy.Send(new OscMessage("/motive/state/mode", live ? "live" : "edit"));
+                }
+            }
+
+            r = mNatNet.SendMessageAndWait("CurrentSessionPath", 3, 100, out resp, out respSize);
+            if (r == 0 && respSize > 4)
+            {
+                string session = Encoding.UTF8.GetString(resp, 0, respSize).TrimEnd('\0');
+                pushSessionState(session);
+            }
+
+            r = mNatNet.SendMessageAndWait("GetTakeProperty,,Name", 3, 100, out resp, out respSize);
+            if (r == 0 && respSize > 4)
+            {
+                string name = Encoding.UTF8.GetString(resp, 0, respSize).TrimEnd('\0');
+                pushTakeNameState(name);
+            }
+
+            r = mNatNet.SendMessageAndWait("FrameRate", 3, 100, out resp, out respSize);
+            if (r == 0 && respSize == 4)
+            {
+                float fps = BitConverter.ToSingle(resp, 0);
+                OSCProxy.Send(new OscMessage("/motive/state/framerate", fps));
+            }
         }
 
         static void connectToServer(Options opts)

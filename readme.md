@@ -62,6 +62,7 @@ when streaming, the following messages are sent at the beginning of each frame
 + /frame/start \<frameNumber>
 + /frame/timestamp \<timestamp>
 + /frame/timecode \<smtp> \<subframe>
++ /frame/recording \<0/1>
 
 if OSC MODE = sparck
 
@@ -79,35 +80,41 @@ upon streaming, the following messages are sent depending on the OSC Mode
 #### MAX/MSP: OSC MODE = max
 
 + (!1) /marker \<markerID> position \<x> \<y> \<z>
++ (!1) /marker \<markerID> residual \<float>
 + (!3) /othermarker \<markerID> position \<x> \<y> \<z>
 + /rigidbody \<rigidbodyID> tracked \<0/1>
 + /rigidbody \<rigidbodyID> position \<x> \<y> \<z>
 + /rigidbody \<rigidbodyID> quat \<qx> \<qy> \<qz> \<qw>
 + (!4) /rigidbody \<rigidbodyID> matrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
 + (!5) /rigidbody \<rigidbodyID> invmatrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
++ (!2) /skeleton/bone \<skleletonName> \<boneID> tracked \<0/1>
 + (!2) /skeleton/bone \<skleletonName> \<boneID> position \<x> \<y> \<z>
 + (!2) /skeleton/bone \<skleletonName> \<boneID> quat \<qx> \<qy> \<qz> \<qw>
 
 #### ISADORA: OSC MODE = isadora
 
 + (!1) /marker/\<markerID>/position \<x> \<y> \<z>
++ (!1) /marker/\<markerID>/residual \<float>
 + (!3) /othermarker/\<markerID>/position \<x> \<y> \<z>
 + /rigidbody/\<rigidbodyID>/tracked \<0/1>
 + /rigidbody/\<rigidbodyID>/position \<x> \<y> \<z>
 + /rigidbody/\<rigidbodyID>/quat \<qx> \<qy> \<qz> \<qw>
 + (!4) /rigidbody/\<rigidbodyID>/matrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
 + (!5) /rigidbody/\<rigidbodyID>/invmatrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
++ (!2) /skeleton/\<skleletonName>/bone/\<boneID>/tracked \<0/1>
 + (!2) /skeleton/\<skleletonName>/bone/\<boneID>/position \<x> \<y> \<z>
-+ (!2) /skeleton/\<skleletonName>/bone/\<boneID>/quat \<qx> \<qy> \<qz> \q<w>
++ (!2) /skeleton/\<skleletonName>/bone/\<boneID>/quat \<qx> \<qy> \<qz> \<qw>
 
 #### TouchDesigner: OSC MODE = touch
 
 + (!1) /marker/\<markerID>/position \<x> \<y> \<z>
++ (!1) /marker/\<markerID>/residual \<float>
 + (!3) /othermarker/\<markerID>/position \<x> \<y> \<z>
 + /rigidbody/\<rigidbodyID>/tracked \<0/1>
 + /rigidbody/\<rigidbodyID>/transformation \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
-+ (!3) /rigidbody/\<rigidbodyID>/matrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
-+ (!4) /rigidbody/\<rigidbodyID>/invmatrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
++ (!4) /rigidbody/\<rigidbodyID>/matrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
++ (!5) /rigidbody/\<rigidbodyID>/invmatrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
++ (!2) /skeleton/\<skleletonName>/bone/\<boneID>/tracked \<0/1>
 + (!2) /skeleton/\<skleletonName>/bone/\<boneID>/transformation \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
 
 
@@ -115,12 +122,13 @@ upon streaming, the following messages are sent depending on the OSC Mode
 
 the addresses for sparck mode are structured in a way to process them quickly in sparck and are therefore not very human readable.
 
-\<datatype> specifies what kind of data follows: 0 = tracked / 1 = marker / 2 = rigidbody
+\<datatype> specifies what kind of data follows: 0 = tracked / 1 = marker / 2 = rigidbody or bone
 
-+      /rb \<rigidbodyID> <datatype = 0> \<0/1>
-+ (!1) /rb \<rigidbodyID> <datatype = 1> \<x0> \<y0> \<z0> \<x1> \<y1> \<z1> ...
-+      /rb \<rigidbodyID> <datatype = 2> \<timestamp> \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
-+ (!2) /skel \<skleletonID> \<boneID> \<timestamp> \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
++      /rb \<rigidbodyID> \<datatype=0> \<0/1>
++ (!1) /rb \<rigidbodyID> \<datatype=1> \<x0> \<y0> \<z0> \<x1> \<y1> \<z1> ...
++      /rb \<rigidbodyID> \<datatype=2> \<timestamp> \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
++ (!2) /skel \<skelID> \<boneID> \<datatype=0> \<0/1>
++ (!2) /skel \<skelID> \<boneID> \<datatype=2> \<timestamp> \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
 + (!3) /om \<x0> \<y0> \<z0> \<x1> \<y1> \<z1> ...
 
 **(!1) - will only be sent if the CLI --sendMarkerInfo is set**
@@ -139,7 +147,77 @@ if OSC MODE = sparck
 
 ### Remote control
 
-sending following commands to the \<OscListeningPort> will pass commands to Motive:
+#### Motive state feedback (outgoing, sent on change)
+
+These messages are sent automatically whenever the corresponding state changes in Motive. They are also sent once on connect so clients can initialise their UI without polling.
+
++ /motive/state/recording \<0/1>
++ /motive/state/mode \<"live"/"edit">
++ /motive/state/takename \<string>
++ /motive/state/session \<string>
++ /motive/state/framerate \<float>
+
+--
+
+#### Recording control (incoming)
+
++ /motive/record/start — start recording
++ /motive/record/start \<takename> — set take name then start recording
++ /motive/record/stop — stop recording
++ /motive/record/toggle — toggle recording on/off
++ /motive/record/takename \<string> — set take name without starting
+
+--
+
+#### Mode control (incoming)
+
++ /motive/mode/live — switch to Live mode
++ /motive/mode/edit — switch to Edit / Playback mode
++ /motive/mode/toggle — toggle between Live and Edit
+
+--
+
+#### Playback control (incoming, Edit mode only)
+
++ /motive/playback/play — start timeline playback
++ /motive/playback/stop — stop timeline playback
++ /motive/playback/toggle — toggle play/stop
++ /motive/playback/frame \<int> — seek to frame
++ /motive/playback/start \<int> — set playback start frame
++ /motive/playback/end \<int> — set playback end frame
++ /motive/playback/loop \<0/1> — enable/disable looping
++ /motive/playback/take \<string> — select take for playback
+
+--
+
+#### Asset control (incoming)
+
++ /motive/asset/enable \<name> — enable asset tracking
++ /motive/asset/disable \<name> — disable asset tracking
++ /motive/asset/recalibrate \<name> — recalibrate asset
++ /motive/asset/resetorientation \<name> — reset asset orientation
+
+--
+
+#### Session control (incoming)
+
++ /motive/session/set \<name> — switch to or create a session
++ /motive/session/get — request current session path → /motive/state/session
+
+--
+
+#### State queries (incoming → triggers /motive/state/* response)
+
++ /motive/query/recording — → /motive/state/recording
++ /motive/query/mode — → /motive/state/mode
++ /motive/query/takename — → /motive/state/takename
++ /motive/query/framerate — → /motive/state/framerate
+
+--
+
+#### Raw command passthrough (incoming)
+
+sending following commands to the \<OscListeningPort> will pass commands directly to Motive:
 
 + /motive/remote \<command>
 
@@ -153,9 +231,11 @@ in case of an error: [error numbers](https://docs.optitrack.com/developer-tools/
 
 --
 
+#### Script parameter control (incoming)
+
 sending following commands to the \<OscListeningPort> will change script parameters:
 
-+ /script/oscModeSparck (0..1) will start/stop streaming max type messages
++ /script/oscModeSparck (0..1) will start/stop streaming sparck type messages
 + /script/oscModeMax (0..1) will start/stop streaming max type messages
 + /script/oscModeIsadora (0..1) will start/stop streaming isadora type messages
 + /script/oscModeTouch (0..1) will start/stop streaming touchdesigner type messages
@@ -190,7 +270,7 @@ will return all command options and all rigidbodies and skeletons currently stre
 Building
 ---------
 
-This code is based on the NatNet SDK from optitrack (https://optitrack.com/software/natnet-sdk/) and includes the dll from SharpOSC (https://github.com/ValdemarOrn/SharpOSC).
+This code is based on the NatNet SDK 4.4 from optitrack (https://optitrack.com/software/natnet-sdk/) and includes the dll from SharpOSC (https://github.com/tecartlab/SharpOSC).
 
 Open the source folder and build NatNetFour2OSC Project
 
