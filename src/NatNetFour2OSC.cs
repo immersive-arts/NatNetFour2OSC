@@ -299,7 +299,7 @@ namespace NatNetThree2OSC
             SharpOSC.ProxyOscPacket callback = delegate (SharpOSC.OscPacket packet)
             {
                 mProxyHS_ctrl = 1;
-                var messageReceived = (SharpOSC.OscMessage)packet;
+                var messageReceived = packet as SharpOSC.OscMessage;
                 if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/command"))
                 {
                     if (messageReceived.Arguments.Count > 0 && messageReceived.Arguments.IndexOf("refetch") != -1)
@@ -308,7 +308,7 @@ namespace NatNetThree2OSC
                         mAssetChanged = true;
                     }
                 }
-                if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/remote"))
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/remote"))
                 {
                     if (messageReceived.Arguments.Count > 0)
                     {
@@ -524,6 +524,11 @@ namespace NatNetThree2OSC
                 }
 
                 // ── /motive/query/* ──────────────────────────────────────────────────────
+                else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/query/state"))
+                {
+                    queryAndPushMotiveState();
+                    Console.WriteLine("Received /motive/query/state");
+                }
                 else if (messageReceived != null && messageReceived.Address.Equals(value: "/motive/query/recording"))
                 {
                     OSCProxy.Send(new OscMessage("/motive/state/recording", mMotiveRecording ? 1 : 0));
@@ -1295,11 +1300,8 @@ namespace NatNetThree2OSC
 
                                 if (bone != null) // during a refetch the bone descriptions might be removed for a moment
                                 {
-                                    int boneTracked = boneData.Tracked ? 1 : 0;
                                     if (mOscModeMax)
                                     {
-                                        message = new OscMessage("/skeleton/bone", skl.Name, bone.ID, "tracked", boneTracked);
-                                        bundle.Add(message);
                                         message = new OscMessage("/skeleton/bone", skl.Name, bone.ID, "position", pxt, pyt, pzt);
                                         bundle.Add(message);
                                         message = new OscMessage("/skeleton/bone", skl.Name, bone.ID, "quat", qxt, qyt, qzt, qwt);
@@ -1307,8 +1309,6 @@ namespace NatNetThree2OSC
                                     }
                                     if (mOscModeIsa)
                                     {
-                                        message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/tracked", boneTracked);
-                                        bundle.Add(message);
                                         message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/position", pxt, pyt, pzt);
                                         bundle.Add(message);
                                         message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/quat", qxt, qyt, qzt, qwt);
@@ -1316,17 +1316,12 @@ namespace NatNetThree2OSC
                                     }
                                     if (mOscModeTouch)
                                     {
-                                        message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/tracked", boneTracked);
-                                        bundle.Add(message);
                                         message = new OscMessage("/skeleton/" + skl.Name + "/bone/" + bone.ID + "/transformation", pxt, pyt, pzt, qxt, qyt, qzt, qwt);
                                         bundle.Add(message);
                                     }
                                     if (mOscModeSparck)
                                     {
-                                        // tracked   -> /skel <skelID> <boneID> <datatype=0> <0/1>
-                                        // skeleton  -> /skel <skelID> <boneID> <datatype=2> <timestamp> <px> <py> <pz> <qx> <qy> <qz> <qw>
-                                        message = new OscMessage("/skel", skl.ID, bone.ID, 0, boneTracked);
-                                        bundle.Add(message);
+                                        // skeleton -> /skel <skelID> <boneID> <datatype=2> <timestamp> <px> <py> <pz> <qx> <qy> <qz> <qw>
                                         message = new OscMessage("/skel", skl.ID, bone.ID, 2, (float)data.fTimestamp * 1000f, pxt, pyt, pzt, qxt, qyt, qzt, qwt);
                                         bundle.Add(message);
                                     }
@@ -1397,32 +1392,24 @@ namespace NatNetThree2OSC
             byte[] resp = new byte[1024];
             int respSize = 0;
 
-            // recording state from frame flag is more reliable; query mode explicitly
+            // always send all state on connect regardless of cached values
             int r = mNatNet.SendMessageAndWait("CurrentMode", 3, 100, out resp, out respSize);
             if (r == 0 && respSize == 4)
             {
                 int mode = BitConverter.ToInt32(resp, 0);
-                bool live = (mode == 0);
-                if (mMotiveLiveMode != live)
-                {
-                    mMotiveLiveMode = live;
-                    OSCProxy.Send(new OscMessage("/motive/state/mode", live ? "live" : "edit"));
-                }
+                mMotiveLiveMode = (mode == 0);
             }
+            OSCProxy.Send(new OscMessage("/motive/state/mode", mMotiveLiveMode ? "live" : "edit"));
 
             r = mNatNet.SendMessageAndWait("CurrentSessionPath", 3, 100, out resp, out respSize);
-            if (r == 0 && respSize > 4)
-            {
-                string session = Encoding.UTF8.GetString(resp, 0, respSize).TrimEnd('\0');
-                pushSessionState(session);
-            }
+            if (r == 0 && respSize >= 1)
+                mMotiveSession = Encoding.UTF8.GetString(resp, 0, respSize).TrimEnd('\0');
+            OSCProxy.Send(new OscMessage("/motive/state/session", mMotiveSession));
 
             r = mNatNet.SendMessageAndWait("GetTakeProperty,,Name", 3, 100, out resp, out respSize);
-            if (r == 0 && respSize > 4)
-            {
-                string name = Encoding.UTF8.GetString(resp, 0, respSize).TrimEnd('\0');
-                pushTakeNameState(name);
-            }
+            if (r == 0 && respSize >= 1)
+                mMotiveTakeName = Encoding.UTF8.GetString(resp, 0, respSize).TrimEnd('\0');
+            OSCProxy.Send(new OscMessage("/motive/state/takename", mMotiveTakeName));
 
             r = mNatNet.SendMessageAndWait("FrameRate", 3, 100, out resp, out respSize);
             if (r == 0 && respSize == 4)
@@ -1430,6 +1417,8 @@ namespace NatNetThree2OSC
                 float fps = BitConverter.ToSingle(resp, 0);
                 OSCProxy.Send(new OscMessage("/motive/state/framerate", fps));
             }
+
+            OSCProxy.Send(new OscMessage("/motive/state/recording", mMotiveRecording ? 1 : 0));
         }
 
         static void connectToServer(Options opts)

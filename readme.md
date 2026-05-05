@@ -87,7 +87,6 @@ upon streaming, the following messages are sent depending on the OSC Mode
 + /rigidbody \<rigidbodyID> quat \<qx> \<qy> \<qz> \<qw>
 + (!4) /rigidbody \<rigidbodyID> matrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
 + (!5) /rigidbody \<rigidbodyID> invmatrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
-+ (!2) /skeleton/bone \<skleletonName> \<boneID> tracked \<0/1>
 + (!2) /skeleton/bone \<skleletonName> \<boneID> position \<x> \<y> \<z>
 + (!2) /skeleton/bone \<skleletonName> \<boneID> quat \<qx> \<qy> \<qz> \<qw>
 
@@ -101,7 +100,6 @@ upon streaming, the following messages are sent depending on the OSC Mode
 + /rigidbody/\<rigidbodyID>/quat \<qx> \<qy> \<qz> \<qw>
 + (!4) /rigidbody/\<rigidbodyID>/matrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
 + (!5) /rigidbody/\<rigidbodyID>/invmatrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
-+ (!2) /skeleton/\<skleletonName>/bone/\<boneID>/tracked \<0/1>
 + (!2) /skeleton/\<skleletonName>/bone/\<boneID>/position \<x> \<y> \<z>
 + (!2) /skeleton/\<skleletonName>/bone/\<boneID>/quat \<qx> \<qy> \<qz> \<qw>
 
@@ -114,7 +112,6 @@ upon streaming, the following messages are sent depending on the OSC Mode
 + /rigidbody/\<rigidbodyID>/transformation \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
 + (!4) /rigidbody/\<rigidbodyID>/matrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
 + (!5) /rigidbody/\<rigidbodyID>/invmatrix \<m11> \<m12> \<m13> \<m14> \<m21> ... \<m44>
-+ (!2) /skeleton/\<skleletonName>/bone/\<boneID>/tracked \<0/1>
 + (!2) /skeleton/\<skleletonName>/bone/\<boneID>/transformation \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
 
 
@@ -122,12 +119,11 @@ upon streaming, the following messages are sent depending on the OSC Mode
 
 the addresses for sparck mode are structured in a way to process them quickly in sparck and are therefore not very human readable.
 
-\<datatype> specifies what kind of data follows: 0 = tracked / 1 = marker / 2 = rigidbody or bone
+\<datatype> specifies what kind of data follows: 0 = tracked / 1 = marker / 2 = rigidbody or skeleton bone
 
 +      /rb \<rigidbodyID> \<datatype=0> \<0/1>
 + (!1) /rb \<rigidbodyID> \<datatype=1> \<x0> \<y0> \<z0> \<x1> \<y1> \<z1> ...
 +      /rb \<rigidbodyID> \<datatype=2> \<timestamp> \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
-+ (!2) /skel \<skelID> \<boneID> \<datatype=0> \<0/1>
 + (!2) /skel \<skelID> \<boneID> \<datatype=2> \<timestamp> \<x> \<y> \<z> \<qx> \<qy> \<qz> \<qw>
 + (!3) /om \<x0> \<y0> \<z0> \<x1> \<y1> \<z1> ...
 
@@ -208,6 +204,7 @@ These messages are sent automatically whenever the corresponding state changes i
 
 #### State queries (incoming → triggers /motive/state/* response)
 
++ /motive/query/state 1 — → all /motive/state/* messages at once (use this to sync a late-joining client)
 + /motive/query/recording — → /motive/state/recording
 + /motive/query/mode — → /motive/state/mode
 + /motive/query/takename — → /motive/state/takename
@@ -278,7 +275,7 @@ Open the source folder and build NatNetFour2OSC Project
 
 [CommandLine Parser Library](https://github.com/commandlineparser/commandline). How install the package got [here](https://github.com/commandlineparser/commandline/wiki/Getting-Started).
 
-[SharpOSC](https://github.com/tecartlab/SharpOSC/releases/tag/v0.1.2.0). This is a fork from the official repo with a new class that allows "bidirectional" udp connectîons.
+[SharpOSC](https://github.com/tecartlab/SharpOSC/releases/tag/v0.1.2.0). This is a fork from the official repo with a new UDProxy class that allows bidirectional UDP connections.
 
 Releasing
 ---------

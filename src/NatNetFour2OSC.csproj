@@ -81,10 +81,9 @@
     <Reference Include="CommandLine, Version=2.9.1.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.2.9.1\lib\net461\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="NatNetML, Version=2.10.6100.18758, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="NatNetML">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\x64\NatNetML.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="SharpOSC">
       <HintPath>..\lib\x64\SharpOSC.dll</HintPath>
@@ -105,6 +104,12 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\lib\x64\NatNetLib.dll">
+      <Link>NatNetLib.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5">
