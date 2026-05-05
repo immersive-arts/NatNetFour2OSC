@@ -1,4 +1,4 @@
-NatNetFour2OSC 10.0.0
+NatNetFour2OSC
 ===================================
 
 
@@ -203,4 +203,4 @@ Open the source folder and build NatNetFour2OSC Project
 Contribute
 ----------
 
-I would love to get some feedback. Use the Issue tracker on Github to send bug reports and feature requests, or just if you have something to say about the project. If you have code changes that you would like to have integrated into the main repository, send me a pull request or a patch. I will try my best to integrate them and make sure NatNetThree2OSC improves and matures.
+I would love to get some feedback. Use the Issue tracker on Github to send bug reports and feature requests, or just if you have something to say about the project. If you have code changes that you would like to have integrated into the main repository, send me a pull request or a patch. I will try my best to integrate them and make sure NatNetFour2OSC improves and matures.

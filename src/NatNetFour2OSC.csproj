@@ -83,11 +83,11 @@
     </Reference>
     <Reference Include="NatNetML, Version=2.10.6100.18758, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\$(CurrentPlatform)\NatNetML.dll</HintPath>
+      <HintPath>..\lib\x64\NatNetML.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="SharpOSC">
-      <HintPath>..\..\lib\x64\SharpOSC.dll</HintPath>
+      <HintPath>..\lib\x64\SharpOSC.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

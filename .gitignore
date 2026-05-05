@@ -1,2 +1,3 @@
-Samples/.vs/
-Samples/NatNetFour2OSC/obj/
+.vs/
+src/obj/
+bin/

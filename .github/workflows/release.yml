@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from AssemblyInfo
+        id: version
+        shell: pwsh
+        run: |
+          $line = Select-String -Path "src/Properties/AssemblyInfo.cs" -Pattern 'AssemblyVersion\("(.+)"\)'
+          $version = $line.Matches[0].Groups[1].Value
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Verify tag matches AssemblyVersion
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = "${{ steps.version.outputs.VERSION }}"
+          if ($tag -ne "v$version") {
+            Write-Error "Tag '$tag' does not match AssemblyVersion 'v$version'. Update src/Properties/AssemblyInfo.cs before tagging."
+            exit 1
+          }
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore NatNetFour2OSC.sln
+
+      - name: Build Release x64
+        run: msbuild NatNetFour2OSC.sln /p:Configuration=Release /p:Platform=x64 /v:minimal
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          Compress-Archive -Path bin/x64/* -DestinationPath "NatNetFour2OSC-v$version-x64.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "NatNetFour2OSC v${{ steps.version.outputs.VERSION }}"
+          files: "NatNetFour2OSC-v${{ steps.version.outputs.VERSION }}-x64.zip"
+          generate_release_notes: true
